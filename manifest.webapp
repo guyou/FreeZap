@@ -3,7 +3,7 @@
   "description": "Freebox Player V6 Révolution remote control",
   "version": "1.0.0",
   "launch_path": "/app.html",
-  "fullscreen": false,
+  "fullscreen": "false",
   "icons": {
     "48": "/img/shortcut-icon-48.png",
     "60": "/img/shortcut-icon-60.png",
