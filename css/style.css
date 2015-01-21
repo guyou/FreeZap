@@ -1,0 +1,130 @@
+* { font-family: FiraSans, sans-serif; }
+
+#index {
+    height: 100%;
+    z-index: 15;
+}
+
+#zap {
+    top: 5em !important;
+}
+
+.active {
+    display: inline;
+    padding: 0.2em 0.4em;
+    font-size: 75%;
+    font-weight: 700;
+    line-height: 1;
+    color: #FFF;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 0.25em;
+    background-color: #5CB85C;
+}
+
+.button, .bb-button {
+    border-radius: 3px !important;
+}
+
+/* From right anim */
+[data-position="right"] {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    transform: translateX(100%);
+    -webkit-transform: translateX(100%);
+}
+
+[data-position="right"].current {
+    animation: rightToCurrent 0.4s forwards;
+    -webkit-animation: rightToCurrent 0.4s forwards;
+}
+
+[data-position="right"].right {
+    animation: currentToRight 0.4s forwards;
+    -webkit-animation: currentToRight 0.4s forwards;
+}
+
+[data-position="current"].left {
+    animation: currentToLeft 0.4s forwards;
+    -webkit-animation: currentToLeft 0.4s forwards;
+}
+
+[data-position="current"].leftToCurrent {
+    animation: leftToCurrent 0.4s forwards;
+    -webkit-animation: leftToCurrent 0.4s forwards;
+}
+
+/* From left anim */
+[data-position="left"] {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    transform: translateX(-100%);
+    -webkit-transform: translateX(-100%);
+}
+
+[data-position="left"].current {
+    animation: leftToCurrent 0.4s forwards;
+    -webkit-animation: leftToCurrent 0.4s forwards;
+}
+
+[data-position="left"].left {
+    animation: currentToLeft 0.4s forwards;
+    -webkit-animation: currentToLeft 0.4s forwards;
+}
+
+[data-position="current"].right {
+    animation: currentToRight 0.4s forwards;
+    -webkit-animation: currentToRight 0.4s forwards;
+}
+
+[data-position="current"].rightToCurrent {
+    animation: rightToCurrent 0.4s forwards;
+    -webkit-animation: rightToCurrent 0.4s forwards;
+}
+
+/* List */
+.content [data-type="list"] {
+    margin: 0 -1.5rem;
+}
+section[role="region"] .content [data-type="list"] header {
+    margin: 0;
+}
+[data-type="list"] li p, [data-type="list"] li p:first-of-type {
+    padding-left: 0;
+}
+
+/* Custom styles for pack-switch (see lib/bb/style/switches.css) */
+ul li label {
+    text-transform: none;
+}
+ul li > label.pack-switch {
+    -moz-margin-start: -1.5rem;
+    -moz-margin-end: -1.5rem;
+    -moz-padding-start: 1.5rem;
+    -moz-padding-end: 1.5rem;
+    width: 100%;
+    height: calc(100% - 1rem);
+    min-height: 5rem;
+    overflow: visible;
+    display: flex;
+}
+ul li > label.pack-switch > span {
+    -moz-padding-end: 9rem;
+    line-height: 5rem;
+    height: auto;
+}
+ul li > label.pack-switch > input ~ span:after {
+    left: auto;
+    right: 1.5rem;
+}
+ul li > label.pack-switch:active {
+    background-color: #b2f2ff;
+    color: #222;
+}
