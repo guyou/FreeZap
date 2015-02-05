@@ -78,31 +78,30 @@ Crafty.scene('Zap', function() {
     function sendKey(key) {
         var zap = App.zaps[App.active];
         var keyCode = self.keys[key.coords.y][key.coords.x];
+        var url = 'http://' + zap.player + '.freebox.fr/pub/remote_control?';
+        url += $.param({
+            code: zap.code,
+            key: keyCode,
+            long: keyCode === 'bwd' || keyCode === 'fwd' ? true : false
+        });
 
-        $.ajax({
-            url: 'http://' + zap.player + '.freebox.fr/pub/remote_control',
-            data: {
-                code: zap.code,
-                key: keyCode,
-                long: keyCode === 'bwd' || keyCode === 'fwd' ? true : false
-            },
-            dataType: 'jsonp',
-            error: function(jqXHR, textStatus, errorThrown) {
-                if (textStatus === 'error') {
-                    if (navigator.onLine) {
-                        utils.status.show(navigator.mozL10n.get('invalid-remote-control-code'));
-                    }
-                    else {
-                        utils.status.show(navigator.mozL10n.get('no-wifi-connection'));
-                    }
-                }
-                else if (textStatus === 'timeout') {
+        var xhr = new XMLHttpRequest({mozSystem: true});
+        xhr.open("GET", url);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (!navigator.onLine) {
                     utils.status.show(navigator.mozL10n.get('no-wifi-connection'));
                 }
-            },
-            timeout: 1000,
-            type: 'GET'
-        });
+                else if (xhr.status !== 200) {
+                    utils.status.show(navigator.mozL10n.get('invalid-remote-control-code'));
+                }
+            }
+        };
+        xhr.timeout = 1000;
+        xhr.ontimeout = function () {
+             utils.status.show(navigator.mozL10n.get('no-wifi-connection'));
+        }; 
+        xhr.send();
     }
 
     function sendKeyPeriodically(key, msec) {

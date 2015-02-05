@@ -1,7 +1,7 @@
 {
   "name": "FreeZap",
   "description": "Freebox Player V6 Révolution remote control",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "launch_path": "/app.html",
   "fullscreen": "false",
   "icons": {
@@ -12,6 +12,12 @@
   "developer": {
     "name": "Valéry Febvre",
     "url": "https://github.com/valos/FreeZap"
+  },
+  "type": "privileged",
+  "permissions": {
+    "systemXHR": {
+        "description": "Connection to Freebox Player remote API"
+    }
   },
   "locales": {
     "en-US": {
