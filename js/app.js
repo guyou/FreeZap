@@ -83,12 +83,12 @@ var App = {
             $('#form-zap-edit').get(0).reset();
             $('#form-zap-edit #active').prop("checked", false);
 
-            $('#zap-edit').attr('class', 'current');
+            $('#zap-edit').attr('class', 'show');
         });
 
         // edit zap
         $('#btn-zap-edit-close').on('click', function () {
-            $('#zap-edit').attr('class', 'right');
+            $('#zap-edit').attr('class', 'hide');
         });
         $('#btn-zap-edit-save').on('click', function () {
             var id;
@@ -120,7 +120,7 @@ var App = {
             }
 
             App.updateZapsList();
-            $('#zap-edit').attr('class', 'right');
+            $('#zap-edit').attr('class', 'hide');
         });
 
         App.updateSettings();
@@ -166,7 +166,7 @@ var App = {
                 $('#form-zap-edit #code').val(App.zaps[id].code);
                 $('#form-zap-edit #active').prop('checked', App.active === id);
 
-                $('#zap-edit').attr('class', 'current');
+                $('#zap-edit').attr('class', 'show');
             });
         }
         else {
@@ -268,24 +268,27 @@ function Zap() {
     var periodicalInterval = null;
 
     function init() {
-        var loader = new PIXI.loaders.Loader();
+        var loader;
+
+        //renderer = new PIXI.autoDetectRenderer(App.sizes.width, App.sizes.height);
+        renderer = new PIXI.CanvasRenderer(App.sizes.width, App.sizes.height);
+        renderer.backgroundColor = 0x665C52;
+
+        $('#index article').append($(renderer.view));
+
+        loader = new PIXI.loaders.Loader();
         loader.add('keys', 'img/sprite-keys.png');
         loader.once('complete', build);
         loader.load();
-        
-        stage = new PIXI.Container();
-        stage.interactive = true;
-        renderer = PIXI.autoDetectRenderer(App.sizes.width, App.sizes.height);
-        renderer.view.style.marginTop = '50px';
-        renderer.backgroundColor = 0x665C52;
-
-        $('#zap').append($(renderer.view));
     }
 
     function build(loader, resources) {
         var keysTexture = resources.keys.texture;
         var cropW = keysTexture.width / App.sizes.cols;
         var cropH = keysTexture.height / App.sizes.rows;
+
+        stage = new PIXI.Container();
+        stage.interactive = true;
 
         overshadow = new PIXI.Graphics();
         overshadow.beginFill(0x0000000);
@@ -324,7 +327,6 @@ function Zap() {
     }
 
     function onKeyTouchStart(data) {
-        console.log('onKeyTouchStart', this.fz_name, data);
         if (this.fz_name === null) {
             return;
         }
@@ -346,11 +348,6 @@ function Zap() {
             overshadow.scale.x = 1;
         }
         overshadow.visible = true;
-
-        if (App.active === null) {
-            utils.status.show(navigator.mozL10n.get('no-active-remote-control'));
-            return;
-        }
 
         if (this.fz_name === 'vol_dec' || this.fz_name === 'vol_inc' ||
             this.fz_name === 'left' || this.fz_name === 'right' ||
@@ -408,7 +405,6 @@ function Zap() {
         var xhr = new XMLHttpRequest({mozSystem: true});
         xhr.open("GET", url);
         xhr.onreadystatechange = function() {
-            console.log(xhr.readyState, xhr.status, navigator.onLine);
             if (xhr.readyState === 4) {
                 if (!navigator.onLine) {
                     utils.status.show(navigator.mozL10n.get('no-wifi-connection'));
@@ -426,6 +422,10 @@ function Zap() {
     }
 
     function sendKeyPeriodically(name, msec) {
+        if (App.active === null) {
+            utils.status.show(navigator.mozL10n.get('no-active-remote-control'));
+            return;
+        }
         periodicalInterval = window.setInterval(
             function() {
                 sendKey(name);

@@ -20,9 +20,8 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#index {
-    height: 100%;
-    z-index: 15;
+#index article {
+    padding-top: 5rem;
 }
 
 .active {
@@ -43,6 +42,7 @@
     border-radius: 3px !important;
 }
 
+/* Page animation */
 /* From right anim */
 [data-position="right"] {
     position: absolute;
@@ -103,6 +103,15 @@
 [data-position="current"].rightToCurrent {
     animation: rightToCurrent 0.4s forwards;
     -webkit-animation: rightToCurrent 0.4s forwards;
+}
+
+.show {
+    animation: show 0.4s forwards;
+    -webkit-animation: show 0.4s forwards;
+}
+.hide {
+    animation: hide 0.4s forwards;
+    -webkit-animation: hide 0.4s forwards;
 }
 
 /* List */
