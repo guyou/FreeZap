@@ -356,7 +356,7 @@ function Zap() {
                 function() {
                     sendKeyPeriodically(
                         keyPressed,
-                        keyPressed === 'vol_dec' || keyPressed === 'vol_inc' ? 50 : 150
+                        keyPressed === 'vol_dec' || keyPressed === 'vol_inc' ? 75 : 150
                     );
                 },
                 500
