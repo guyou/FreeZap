@@ -1,4 +1,28 @@
+/**
+ * FreeZap
+ *
+ * written by Valéry Febvre
+ * vfebvre@aester-eggs.com
+ *
+ * Copyright 2014-2015 Valéry Febvre
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 var App = {
+    storage: Storage(),
+
     sizes: {
         rows: 7,
         cols: 5,
@@ -13,22 +37,20 @@ var App = {
     },
 
     // Settings
-    zaps: Crafty.storage('zaps') || [],
-    active: Crafty.storage('active'),
-    keysVibration: Crafty.storage('keysVibration') || false,
-    
-    // Initialize and start app
+    zaps: null,
+    active: null,
+    keysVibration: null,
+
+    // Start app
     start: function() {
+        App.zaps = App.storage.get('zaps') || [];
+        App.active = App.storage.get('active');
+        App.keysVibration = App.storage.get('keysVibration') || false;
+
         App.sizes.width = Math.min(window.innerHeight, window.innerWidth);
         App.sizes.height = Math.max(window.innerHeight, window.innerWidth) - $('#index header.fixed').height();
         App.sizes.key.width = App.sizes.width / App.sizes.cols;
         App.sizes.key.height = Math.min(App.sizes.key.width, App.sizes.height / App.sizes.rows);
-
-        Crafty.init(App.sizes.width, App.sizes.height, 'zap');
-        Crafty.background('#665c52');
-        $('#index').on("animationend wekitAnimationEnd", function(event) {
-            Crafty.viewport.reload();
-        });
 
         // about
         $('#btn-about').on('click', function () {
@@ -51,7 +73,7 @@ var App = {
         });
         $('#form-settings #keys-vibration').on('change', function () {
             App.keysVibration = $(this).is(':checked');
-            Crafty.storage('keysVibration', App.keysVibration);
+            App.storage.set('keysVibration', App.keysVibration);
         });
 
         // add zap
@@ -84,15 +106,15 @@ var App = {
                 player: $('#form-zap-edit #player').val(),
                 code: $('#form-zap-edit #code').val()
             };
-            Crafty.storage('zaps', App.zaps);
+            App.storage.set('zaps', App.zaps);
 
             if ($('#form-zap-edit #active').is(':checked')) {
-                Crafty.storage('active', id);
+                App.storage.set('active', id);
                 App.active = id;
             }
             else {
-                if (Crafty.storage('active') === id) {
-                    Crafty.storage.remove('active');
+                if (App.storage.get('active') === id) {
+                    App.storage.remove('active');
                     App.active = null;
                 }
             }
@@ -104,10 +126,10 @@ var App = {
         App.updateSettings();
 
         navigator.mozL10n.once(function() {
-            Crafty.scene('Loading');
+            Zap();
         });
     },
-
+    
     updateSettings: function() {
         App.updateZapsList();
 
@@ -152,5 +174,267 @@ var App = {
         }
     }
 };
+
+function Storage() {
+    function get(key) {
+        try {
+            return JSON.parse(window.localStorage.getItem(key));
+        }
+        catch (e) {
+            return window.localStorage.getItem(key);
+        }
+    }
+
+    function set(key, value) {
+        var _value = value;
+
+        if (typeof value === "object") {
+            _value = JSON.stringify(value);
+        }
+
+        window.localStorage.setItem(key, _value);
+    }
+
+    function remove(key) {
+        window.localStorage.removeItem(key);
+    }
+
+    return {
+        get: get,
+        set: set,
+        remove: remove
+    };
+}
+
+function Zap() {
+    var renderer;
+    var stage;
+    var overshadow;
+
+    var keyPressed;
+    var keys = [
+        [
+            "1", // Bouton 1
+            "2", // Bouton 2
+            "3", // Bouton 3
+            "4", // Bouton 4
+            "5"  // Bouton 5
+        ],
+        [
+            "6", // Bouton 6
+            "7", // Bouton 7
+            "8", // Bouton 8
+            "9", // Bouton 9
+            "0"  // Bouton 0
+        ],
+        [
+            "vol_inc", // Bouton volume +
+            "red",     // Bouton rouge
+            "up",      // Bouton haut
+            "blue",    // Bouton bleu
+            "prgm_inc" // Bouton programme +
+        ],
+        [
+            null,
+            "left",    // Bouton gauche
+            "ok",      // Bouton ok
+            "right",   // Bouton droite
+            null
+        ],
+        [
+            "vol_dec", // Bouton volume -
+            "green",   // Bouton vert
+            "down",    // Bouton bas
+            "yellow",  // Bouton jaune
+            "prgm_dec" // Bouton programme -
+        ],
+        [
+            "bwd",  // Bouton << retour arrière
+            "play", // Bouton Lecture / Pause
+            "play", // Bouton Lecture / Pause
+            "fwd",  // Bouton >> avance rapide
+            "rec"   // Bouton Rec
+        ],
+        [
+            "mute", // Bouton sourdine
+            "home", // Bouton Free
+            "home", // Bouton Free
+            "home", // Bouton Free
+            "power" // Bouton Power
+        ]
+    ];
+
+    var periodicalTimeout = null;
+    var periodicalInterval = null;
+
+    function init() {
+        var loader = new PIXI.loaders.Loader();
+        loader.add('keys', 'img/sprite-keys.png');
+        loader.once('complete', build);
+        loader.load();
+        
+        stage = new PIXI.Container();
+        stage.interactive = true;
+        renderer = PIXI.autoDetectRenderer(App.sizes.width, App.sizes.height);
+        renderer.view.style.marginTop = '50px';
+        renderer.backgroundColor = 0x665C52;
+
+        $('#zap').append($(renderer.view));
+    }
+
+    function build(loader, resources) {
+        var keysTexture = resources.keys.texture;
+        var cropW = keysTexture.width / App.sizes.cols;
+        var cropH = keysTexture.height / App.sizes.rows;
+
+        overshadow = new PIXI.Graphics();
+        overshadow.beginFill(0x0000000);
+        overshadow.drawRect(0, 0, App.sizes.key.width, App.sizes.key.height);
+        overshadow.endFill();
+        overshadow.visible = false;
+        overshadow.alpha = 0.33;
+        stage.addChild(overshadow);
+
+        for(var i=0; i<App.sizes.cols; i++) {
+            for(var j=0; j<App.sizes.rows; j++) {
+                var cropX = i * cropW;
+                var cropY = j * cropH;
+                var keyTexture = new PIXI.Texture(keysTexture, new PIXI.Rectangle(cropX, cropY, cropW, cropH));
+                var keySprite = new PIXI.Sprite(keyTexture);
+
+                keySprite.fz_name = keys[j][i];
+                keySprite.width = App.sizes.key.width;
+                keySprite.height = App.sizes.key.height;
+                keySprite.x = i * App.sizes.key.width;
+                keySprite.y = j * App.sizes.key.height;
+                keySprite.interactive = true;
+                keySprite.mousedown = keySprite.touchstart = onKeyTouchStart;
+                keySprite.mouseup = keySprite.touchend = onKeyTouchEnd;
+
+                stage.addChild(keySprite);
+            }
+        }
+
+        animate();
+        
+        function animate() {
+            renderer.render(stage);
+            window.requestAnimationFrame(animate);
+        }
+    }
+
+    function onKeyTouchStart(data) {
+        console.log('onKeyTouchStart', this.fz_name, data);
+        if (this.fz_name === null) {
+            return;
+        }
+
+        keyPressed = this.fz_name;
+
+        if (App.keysVibration) {
+            window.navigator.vibrate(50);
+        }
+
+        if (this.fz_name === 'home') {
+            overshadow.x = App.sizes.key.width;
+            overshadow.y = this.y;
+            overshadow.scale.x = 3;
+        }
+        else {
+            overshadow.x = this.x;
+            overshadow.y = this.y;
+            overshadow.scale.x = 1;
+        }
+        overshadow.visible = true;
+
+        if (App.active === null) {
+            utils.status.show(navigator.mozL10n.get('no-active-remote-control'));
+            return;
+        }
+
+        if (this.fz_name === 'vol_dec' || this.fz_name === 'vol_inc' ||
+            this.fz_name === 'left' || this.fz_name === 'right' ||
+            this.fz_name === 'up' || this.fz_name === 'down') {
+            periodicalTimeout = window.setTimeout(
+                function() {
+                    sendKeyPeriodically(
+                        keyPressed,
+                        keyPressed === 'vol_dec' || keyPressed === 'vol_inc' ? 50 : 150
+                    );
+                },
+                500
+            );
+        }
+    }
+
+    function onKeyTouchEnd(data) {
+        if (!keyPressed) {
+            // null key pressed
+            return;
+        }
+
+        if (periodicalInterval) {
+            window.clearInterval(periodicalInterval);
+            periodicalInterval = null;
+        }
+        if (periodicalTimeout) {
+            window.clearTimeout(periodicalTimeout);
+            periodicalTimeout = null;
+        }
+
+        overshadow.visible = false;
+
+        if (this.fz_name === keyPressed) {
+            if (App.active !== null) {
+                sendKey(this.fz_name);
+            }
+            else {
+                utils.status.show(navigator.mozL10n.get('no-active-remote-control'));
+            }
+        }
+
+        keyPressed = null;
+    }
+
+    function sendKey(name) {
+        var zap = App.zaps[App.active];
+        var url = 'http://' + zap.player + '.freebox.fr/pub/remote_control?';
+        url += $.param({
+            code: zap.code,
+            key: name,
+            long: name === 'bwd' || name === 'fwd' ? true : false
+        });
+
+        var xhr = new XMLHttpRequest({mozSystem: true});
+        xhr.open("GET", url);
+        xhr.onreadystatechange = function() {
+            console.log(xhr.readyState, xhr.status, navigator.onLine);
+            if (xhr.readyState === 4) {
+                if (!navigator.onLine) {
+                    utils.status.show(navigator.mozL10n.get('no-wifi-connection'));
+                }
+                else if (xhr.status !== 200) {
+                    utils.status.show(navigator.mozL10n.get('invalid-remote-control-code'));
+                }
+            }
+        };
+        xhr.timeout = 1000;
+        xhr.ontimeout = function () {
+            utils.status.show(navigator.mozL10n.get('no-wifi-connection-or-invalid-remote-control-code'));
+        }; 
+        xhr.send();
+    }
+
+    function sendKeyPeriodically(name, msec) {
+        periodicalInterval = window.setInterval(
+            function() {
+                sendKey(name);
+            },
+            msec
+        );
+    }
+
+    init();
+}
 
 window.addEventListener('load', App.start, false);
