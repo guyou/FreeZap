@@ -4,7 +4,7 @@
  * written by Valéry Febvre
  * vfebvre@aester-eggs.com
  *
- * Copyright 2014-2015 Valéry Febvre
+ * Copyright 2015 Valéry Febvre
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
