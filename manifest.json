@@ -1,0 +1,14 @@
+{
+    "description":  "Freebox Player V6 Révolution remote control",
+    "framework":    "ubuntu-sdk-15.04-html",
+    "hooks": {
+        "freezap": {
+            "apparmor": "app.json",
+            "desktop":  "app.desktop"
+        }
+    },
+    "maintainer":   "Valéry Febvre <vfebvre@easter-eggs.com>",
+    "name":         "freezap.febvre",
+    "title":        "FreeZap",
+    "version":      "1.1.0"
+}

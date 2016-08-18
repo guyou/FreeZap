@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=FreeZap
+Comment=Freebox Player V6 Révolution remote control
+Exec=webapp-container $@ app.html
+Terminal=false
+Type=Application
+X-Ubuntu-Touch=true
+Icon=./img/shortcut-icon-48.png
